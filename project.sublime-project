@@ -1,0 +1,20 @@
+{  
+	"folders":  
+	[  
+		{  
+			"path": "/home/leon/Téléchargements/of_v0.8.4_linux64_release/examples/gl/shaderExample"  
+		}  
+	],  
+	"settings":  
+	{  
+		"sublimeclang_enable_fast_completions": true,  
+		"sublimeclang_options":  
+		[  
+			"-Isystem",  
+			"-I/usr/include/glib-2.0",
+			"-I/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+			"-lglib-2.0",
+			"/home/leon/Téléchargements/of_v0.8.4_linux64_release/libs/**"
+		]  
+	}  
+}  
