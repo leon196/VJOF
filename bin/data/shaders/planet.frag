@@ -73,7 +73,6 @@ float add( float d1, float d2 ) { return min(d1, d2); }
 vec3 repeat( vec3 p, float c ) { return mod(p, c)-.5*c; }
 
 float posterize( float p, float details ) { return floor(p * details) / details; }
-vec2 posterize( vec2 p, float details ) { return floor(p * details) / details; }
 float reflectance(vec3 a, vec3 b) { return dot(normalize(a), normalize(b)); }
 float grid(vec2 uv, float thickness, float cellSize) { return min(1., step(mod(uv.x, cellSize), thickness) + step(mod(uv.y, cellSize), thickness)); }
 vec2 kaelidoGrid(vec2 p) { return vec2(step(mod(p, 2.0), vec2(1.0))); }
@@ -140,7 +139,7 @@ void main()
         p = repeat(originP, buildingMargin);
         float building = box(p, buildingSize);
         float canBuild = smoothstep(ground, grass, l);
-        building = inter(building, sphere(originP, sphereRadius + canBuild * buildingHeight + terrainHeight));
+        building = inter(building, sphere(originP, sphereRadius + canBuild * (buildingHeight + l * terrainHeight + 0.02*posterize(luminance3, 16.0))));
 
         d = add(planet, building);
         
