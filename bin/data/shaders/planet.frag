@@ -1,10 +1,11 @@
-#version 150
+#version 120
 
-out vec4 fragColor;
+// Varyings
+varying vec2 vTexCoord;
 
 // Uniforms
 uniform float uTime;
-uniform float uMouse;
+uniform vec2 uMouse;
 uniform vec2 uResolution;
 uniform vec2 uTextureResolution;
 uniform sampler2DRect uTexture0;
@@ -25,7 +26,7 @@ vec3 right = vec3(1.0, 0.0, 0.0);
 vec3 up = vec3(0.0, 1.0, 0.0);
 
 // Animation
-vec2 uvScale = vec2(1);
+vec2 uvScale = vec2(1.);
 float terrainHeight = 0.09;
 float sphereRadius = 0.96;
 float translationSpeed = 0.1;
@@ -40,7 +41,7 @@ float grass = .6;
 float moutain = .9;
 float buildingTreshold = 0.6;
 float buildingMargin = 0.04;
-float buildingHeight = 0.06;
+float buildingHeight = 0.01;
 vec3 buildingSize = vec3(0.01, 0.01, 0.1);
 
 // Colors
@@ -72,6 +73,7 @@ float add( float d1, float d2 ) { return min(d1, d2); }
 vec3 repeat( vec3 p, float c ) { return mod(p, c)-.5*c; }
 
 float posterize( float p, float details ) { return floor(p * details) / details; }
+vec2 posterize( vec2 p, float details ) { return floor(p * details) / details; }
 float reflectance(vec3 a, vec3 b) { return dot(normalize(a), normalize(b)); }
 float grid(vec2 uv, float thickness, float cellSize) { return min(1., step(mod(uv.x, cellSize), thickness) + step(mod(uv.y, cellSize), thickness)); }
 vec2 kaelidoGrid(vec2 p) { return vec2(step(mod(p, 2.0), vec2(1.0))); }
@@ -79,7 +81,7 @@ vec2 kaelidoGrid(vec2 p) { return vec2(step(mod(p, 2.0), vec2(1.0))); }
 void main()
 {
     // Ray from UV
-	vec2 uv = gl_FragCoord.xy * 2.0 / uResolution.xy - 1.0;
+	vec2 uv = vTexCoord.xy * 2.0 - 1.0;
     uv.x *= uResolution.x / uResolution.y;
     vec3 ray = normalize(front + right * uv.x + up * uv.y);
     
@@ -102,6 +104,8 @@ void main()
         
         // Transformations
        	p = rotateX(p, PI / 2.0);
+        // p = rotateX(p, uMouse.y);
+        // p = rotateY(p, uMouse.x);
         
         // Sphere UV
         vec3 n = normalize(p);
@@ -109,7 +113,7 @@ void main()
         float angleXY = atan(n.y, n.x) / PI;
        	float refl = reflectance(p, eye) / PI;
         
-        vec2 sphereP = vec2(angleXY, refl);
+        vec2 sphereP = vec2(angleXY, refl) + uMouse * 0.001;
         vec2 sP1 = sphereP * uvScale - rotationSpeed * vec2(cos(translationTime), sin(translationTime));
         vec2 sP2 = sphereP * uvScale + rotationSpeed * vec2(cos(translationTime + .5), sin(translationTime + .5));
 
@@ -117,9 +121,9 @@ void main()
         vec2 uv2 = mod(mix(sP2, 1.0 - sP2, kaelidoGrid(sP2)), 1.0);
         
         // Texture
-        vec3 texture1 = texture2DRect(uTexture0, uv1).rgb;
-        vec3 texture2 = vec3(0.7);//1.0 - texture2DRect(uTexture0, uv2).rgb;
-        vec3 texture3 = vec3(0.2);//texture2DRect(uTexture0, sphereP).rgb;
+        vec3 texture1 = texture2DRect(uTexture0, uv1 * uTextureResolution).rgb;
+        vec3 texture2 = 1.0 - texture2DRect(uTexture0, uv2 * uTextureResolution).rgb;
+        vec3 texture3 = texture2DRect(uTexture0, sphereP * uTextureResolution).rgb;
         
         // Height from luminance
         float luminance1 = (texture1.r + texture1.g + texture1.b) / 3.0;
@@ -128,14 +132,16 @@ void main()
         float l = (luminance1 + luminance2) / 2.0;
         
         // Displacement
-        p += normalize(p) * -terrainHeight * l;
+        p -= normalize(p) * terrainHeight * l;
         float planet = sphere(p, sphereRadius);
-        
+
+        // p = rotateX(originP, uMouse.y * 0.001);
+        // p = rotateY(p, uMouse.x * 0.001);
         p = repeat(originP, buildingMargin);
         float building = box(p, buildingSize);
         float canBuild = smoothstep(ground, grass, l);
-        building = inter(building, sphere(originP, sphereRadius + canBuild * (buildingHeight + 0.02*posterize(luminance3, 16.0))));
-        
+        building = inter(building, sphere(originP, sphereRadius + canBuild * buildingHeight + terrainHeight));
+
         d = add(planet, building);
         
         // Distance min or max reached
@@ -164,5 +170,5 @@ void main()
     }
 
     // Hop
-	fragColor = vec4(color, 1);
+	gl_FragColor = vec4(color, 1);
 }
