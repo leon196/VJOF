@@ -28,3 +28,5 @@
 *.app
 
 /obj
+/bin/*
+!/bin/data
