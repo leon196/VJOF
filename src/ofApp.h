@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "Scene.h"
 
 class ofApp : public ofBaseApp{
 
@@ -25,11 +26,9 @@ class ofApp : public ofBaseApp{
 		ofImage image;
 		ofShader shaderSimple;
 		ofShader shaderPlanet;
-		ofShader shaderFbo;
-		ofFbo fbo;
 
 		bool shadertoy;
-		float fboWidth;
-		float fboHeight;
+
+		Scene scene;
 };
 
